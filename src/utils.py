@@ -90,10 +90,6 @@ def save_class_mapping(
         "class_names": class_names,
     }
     save_json(payload, path)
-    # Also write a copy at the workspace root so tools expecting ./class_names.json find it.
-    root_copy = PROJECT_ROOT / "class_names.json"
-    if path.resolve() != root_copy.resolve():
-        save_json(payload, root_copy)
     return payload
 
 

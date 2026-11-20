@@ -69,7 +69,6 @@ class TestLabelMappingAndInference(unittest.TestCase):
     def test_01_class_names_and_calibration_files_exist(self) -> None:
         """``models/class_names.json`` and ``models/calibration.json`` must match checkpoint."""
         self.assertTrue(CLASS_NAMES_PATH.exists(), f"Missing {CLASS_NAMES_PATH}")
-        self.assertTrue((PROJECT_ROOT / "class_names.json").exists())
         self.assertTrue(CALIBRATION_PATH.exists(), f"Missing {CALIBRATION_PATH}")
 
         mapping = load_class_mapping(CLASS_NAMES_PATH)
