@@ -57,7 +57,7 @@ Model weights (`106 MB`) are stored with Git LFS, so initialize Git LFS before c
 
 ```bash
 git lfs install
-git clone https://github.com/<your-username>/verifake.git
+git clone https://github.com/prajjwal0509/verifake.git
 cd verifake
 ```
 
