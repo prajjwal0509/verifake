@@ -1,0 +1,49 @@
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+kaggle.json
+*credentials*.json
+*secret*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+.netrc
+
+# Datasets and generated manifests
+data/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Caches and Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.cache/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Logs and OS files
+*.log
+logs/
+.DS_Store
+Thumbs.db
+
+# Local design mockups
+design/
+
+# Non-final model checkpoints (keep final best.pt via Git LFS)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+models/*.pt
+!models/best.pt
