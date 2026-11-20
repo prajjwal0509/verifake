@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeriFake — Deepfake Image Forensics</title>
+  <meta name="description" content="Upload a portrait to check whether it is real or AI-generated, with calibrated confidence, Grad-CAM visual attribution, and content credentials." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='3' fill='%23FCF9F2' stroke='%231C1C18' stroke-width='2'/><path d='M9 10l7 13 7-13' fill='none' stroke='%231C1C18' stroke-width='2.4' stroke-linecap='square'/></svg>" />
+  <link rel="stylesheet" href="/static/styles.css?v=light-1" />
+</head>
+<body>
+  <a class="skip-link" href="#analyze">Skip to image upload</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <a class="wordmark" href="#analyze" data-nav="analyze">VeriFake</a>
+        <nav class="topnav" aria-label="Primary">
+          <a class="active" href="#analyze" data-nav="analyze" aria-current="page">Analyze</a>
+          <a href="#performance" data-nav="performance">Performance</a>
+        </nav>
+      </div>
+      <div class="status-pill" id="status" title="Model status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="status-text">Connecting…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <section id="analyze" class="analyze-section" aria-labelledby="page-heading">
+        <header class="intro-header">
+          <div>
+            <h1 id="page-heading" class="intro-title">Is this face real?</h1>
+          </div>
+          <p class="intro-copy">
+            Upload a portrait. VeriFake shows a verdict, how sure it is, and which parts of the image influenced the result.
+          </p>
+        </header>
+
+        <div class="analyze-grid">
+          <div class="col-upload">
+            <section
+              class="dropzone"
+              id="dropzone"
+              aria-label="Image upload"
+            >
+              <input
+                id="file-input"
+                class="sr-only"
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff,.gif,.avif,.heic,.heif,image/*"
+              />
+
+              <div class="dz-empty" id="dz-empty">
+                <div class="upload-icon-box" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M12 16V5" />
+                    <path d="M7.5 9.5L12 5l4.5 4.5" />
+                    <path d="M4 17v2h16v-2" />
+                  </svg>
+                </div>
+                <h2 class="dz-heading">Drop an image or choose a file</h2>
+                <p class="dz-hint">
+                  JPG, PNG, WEBP, BMP, TIFF, GIF, AVIF, HEIC/HEIF. Up to 15 MB. Images are analyzed in memory and not stored.
+                </p>
+                <label class="btn-primary" for="file-input" id="choose-btn" tabindex="0">Choose image</label>
+              </div>
+
+              <div class="dz-preview hidden" id="dz-preview">
+                <div class="preview-frame">
+                  <img id="preview-img" alt="Uploaded portrait preview" />
+                  <div class="dz-fallback hidden" id="dz-fallback">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="16" rx="1" />
+                      <circle cx="8.5" cy="9.5" r="1.5" />
+                      <path d="M21 16l-5-5-4 4-2.5-2.5L3 18" />
+                    </svg>
+                    <span>Decoding preview on server…</span>
+                  </div>
+                </div>
+
+                <dl class="file-meta hidden" id="file-meta">
+                  <div class="meta-cell">
+                    <dt>File</dt>
+                    <dd id="meta-name">—</dd>
+                  </div>
+                  <div class="meta-cell">
+                    <dt>Size</dt>
+                    <dd id="meta-size" class="tabular">—</dd>
+                  </div>
+                  <div class="meta-cell">
+                    <dt>Dimensions</dt>
+                    <dd id="meta-dims" class="tabular">—</dd>
+                  </div>
+                </dl>
+
+                <div class="replace-bar hidden" id="replace-bar">
+                  <button class="btn-secondary" id="replace-browse-btn" type="button">Replace image</button>
+                  <button class="btn-secondary hidden" id="reset-btn" type="button">Clear</button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="col-result" aria-live="polite">
+            <div class="dossier-panel">
+              <!-- State: Empty -->
+              <article class="state-panel state-empty" id="state-empty">
+                <div class="empty-icon-box" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="4" y="4" width="16" height="16" rx="1" />
+                    <circle cx="12" cy="10" r="2.75" />
+                    <path d="M7.5 18c.8-2.4 2.5-3.6 4.5-3.6s3.7 1.2 4.5 3.6" />
+                  </svg>
+                </div>
+                <h2 class="empty-heading">No image analyzed yet</h2>
+                <p class="empty-copy">
+                  Choose a portrait file on the left, drop one into the upload area, or paste an image from your clipboard.
+                </p>
+              </article>
+
+              <!-- State: Loading -->
+              <article class="state-panel state-scanning hidden" id="state-scanning">
+                <div class="state-header">
+                  <span class="kicker">Processing</span>
+                  <h2 class="state-title">Analyzing</h2>
+                </div>
+                <p class="scanning-copy">
+                  Checking content credentials, detecting face, and running calibrated analysis…
+                </p>
+                <div class="progress-track" id="progress" role="progressbar" aria-label="Analyzing image">
+                  <div class="progress-indeterminate"></div>
+                </div>
+              </article>
+
+              <!-- State: Result -->
+              <article class="state-panel state-result hidden" id="state-result">
+                <div class="verdict-strip">
+                  <div class="verdict-main">
+                    <span class="kicker" id="verdict-kicker">Verdict</span>
+                    <h2 class="verdict-heading" id="verdict-badge">—</h2>
+                  </div>
+                  <div class="verdict-score">
+                    <span class="kicker" id="conf-label">Confidence</span>
+                    <span class="verdict-metric tabular" id="gauge-value">—</span>
+                  </div>
+                </div>
+
+                <div class="conf-bar-block">
+                  <div class="split-labels tabular">
+                    <span>Real <strong id="p-real-val">—</strong></span>
+                    <span>AI-generated <strong id="p-fake-val">—</strong></span>
+                  </div>
+                  <div class="split-bar" role="img" aria-label="Calibrated class probabilities">
+                    <div class="split-seg" id="bar-real"></div>
+                    <div class="split-seg" id="bar-fake"></div>
+                  </div>
+                  <p class="verdict-desc" id="verdict-desc">—</p>
+                </div>
+
+                <div class="notice-box warn hidden" id="small-face-warn" role="status">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <path d="M12 3L2 20h20L12 3z" />
+                    <path d="M12 9v5" />
+                    <circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" />
+                  </svg>
+                  <div>
+                    <strong id="small-face-title">Small face detected</strong>
+                    <p id="small-face-detail">—</p>
+                  </div>
+                </div>
+
+                <p class="notice-box hidden" id="pix-override-note"></p>
+
+                <section class="attribution-block hidden" id="attention-map" aria-label="Visual attribution">
+                  <div class="attribution-bar">
+                    <span class="kicker">Visual attribution</span>
+                    <div class="segmented" role="group" aria-label="Attribution display mode">
+                      <button type="button" data-view="original" aria-pressed="false">Original</button>
+                      <button type="button" data-view="cam" aria-pressed="false">Heatmap</button>
+                      <button type="button" data-view="split" aria-pressed="true">Split</button>
+                    </div>
+                  </div>
+
+                  <div class="compare-deck" id="compare" data-view="split">
+                    <figure class="compare-tile tile-orig">
+                      <figcaption>Original</figcaption>
+                      <div class="tile-frame">
+                        <img id="cmp-original" alt="Uploaded portrait" />
+                      </div>
+                    </figure>
+                    <figure class="compare-tile tile-cam">
+                      <figcaption id="cam-label">Heatmap</figcaption>
+                      <div class="tile-frame">
+                        <img id="cmp-cam" alt="Grad-CAM attribution heatmap overlay" />
+                      </div>
+                    </figure>
+                  </div>
+
+                  <p class="heatmap-caption">Highlighted regions influenced the result most.</p>
+                </section>
+
+                <section class="provenance-row hidden" id="provenance" aria-label="Content credentials">
+                  <div class="prov-top">
+                    <div class="prov-headline">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 10v6" />
+                        <circle cx="12" cy="7.2" r="0.8" fill="currentColor" stroke="none" />
+                      </svg>
+                      <span class="prov-label">Provenance</span>
+                      <span class="prov-badge hidden" id="prov-badge"></span>
+                    </div>
+                    <p class="prov-summary" id="prov-summary">—</p>
+                  </div>
+                  <details class="details-row hidden" id="prov-details">
+                    <summary>Credential metadata</summary>
+                    <dl class="kv-dl" id="prov-kv"></dl>
+                  </details>
+                </section>
+
+                <div class="run-meta tabular">
+                  <span id="r-model">—</span>
+                  <span id="r-latency">—</span>
+                  <span id="r-input">—</span>
+                </div>
+
+                <details class="details-row hidden" id="diag-box">
+                  <summary>
+                    <span>Face gate &amp; view breakdown</span>
+                    <span class="diag-status" id="diag-face-status">—</span>
+                  </summary>
+                  <div class="diag-body">
+                    <dl class="kv-dl" id="diag-kv"></dl>
+                    <div class="table-scroll">
+                      <table class="data-table hidden" id="diag-views">
+                        <thead>
+                          <tr>
+                            <th scope="col">View</th>
+                            <th scope="col" class="num">P(AI-generated)</th>
+                            <th scope="col" class="num">P(Real)</th>
+                            <th scope="col">View label</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </details>
+
+                <p class="signal-disclaimer">Treat this as one signal, not proof.</p>
+              </article>
+
+              <!-- State: No face detected -->
+              <article class="state-panel state-no-face hidden" id="state-no-face">
+                <div class="state-header">
+                  <span class="kicker">Face gate</span>
+                  <h2 class="state-title">No face detected</h2>
+                </div>
+                <div class="inset-notice">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                    <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" />
+                    <circle cx="9.5" cy="10" r="0.9" fill="currentColor" stroke="none" />
+                    <circle cx="14.5" cy="10" r="0.9" fill="currentColor" stroke="none" />
+                    <path d="M9.5 15c1.5.9 3.5.9 5 0" />
+                  </svg>
+                  <p id="noface-title">No face detected. This tool analyzes faces only.</p>
+                </div>
+                <p class="noface-prov hidden" id="noface-prov"></p>
+                <div>
+                  <button class="btn-secondary" id="noface-retry-btn" type="button">Choose another image</button>
+                </div>
+              </article>
+
+              <!-- State: Error -->
+              <article class="state-panel state-error hidden" id="state-error">
+                <div class="state-header">
+                  <span class="kicker err-kicker">Upload error</span>
+                  <h2 class="state-title">Could not analyze image</h2>
+                </div>
+                <div class="error-box" role="alert">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <path d="M12 3L2 20h20L12 3z" />
+                    <path d="M12 9v5" />
+                    <circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" />
+                  </svg>
+                  <p id="error-msg">—</p>
+                </div>
+                <div>
+                  <button class="btn-secondary" id="retry-btn" type="button">Try another image</button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="performance" class="performance-section" aria-labelledby="perf-heading">
+        <header class="perf-header">
+          <div>
+            <h2 id="perf-heading" class="perf-title">Model performance</h2>
+            <p class="perf-sub" id="perf-sub">Loading held-out evaluation metrics…</p>
+          </div>
+        </header>
+
+        <p class="perf-empty hidden" id="perf-empty">Evaluation metrics are unavailable. Run evaluation to populate reports/metrics.json.</p>
+
+        <div id="perf-body" class="hidden">
+          <!-- Oversized serif KPI row -->
+          <div class="kpi-row tabular" aria-label="Headline evaluation metrics">
+            <div class="kpi-cell">
+              <span class="kpi-label">Accuracy</span>
+              <span class="kpi-value"><span data-metric="accuracy">—</span><span class="kpi-unit">%</span></span>
+              <span class="kpi-note" id="kpi-acc-note">—</span>
+            </div>
+            <div class="kpi-cell">
+              <span class="kpi-label">Precision</span>
+              <span class="kpi-value"><span data-metric="precision">—</span><span class="kpi-unit">%</span></span>
+              <span class="kpi-note">Predicted AI-generated</span>
+            </div>
+            <div class="kpi-cell">
+              <span class="kpi-label">Recall</span>
+              <span class="kpi-value"><span data-metric="recall">—</span><span class="kpi-unit">%</span></span>
+              <span class="kpi-note" id="kpi-recall-note">—</span>
+            </div>
+            <div class="kpi-cell">
+              <span class="kpi-label">F1 score</span>
+              <span class="kpi-value"><span data-metric="f1">—</span><span class="kpi-unit">%</span></span>
+              <span class="kpi-note">Harmonic mean</span>
+            </div>
+            <div class="kpi-cell">
+              <span class="kpi-label">ROC-AUC</span>
+              <span class="kpi-value"><span data-metric="roc_auc">—</span></span>
+              <span class="kpi-note" id="kpi-auc-note">—</span>
+            </div>
+          </div>
+
+          <!-- Confusion matrix + ROC curve -->
+          <div class="perf-two-col">
+            <section class="perf-subband" aria-labelledby="cm-heading">
+              <div class="band-head">
+                <h3 id="cm-heading">Confusion matrix</h3>
+                <span class="band-meta tabular" id="cm-n">—</span>
+              </div>
+              <div class="table-scroll">
+                <table class="cm-table tabular" aria-label="Held-out test confusion matrix">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="cm-corner">Actual \ Predicted</th>
+                      <th scope="col" id="cm-col-0">Predicted REAL</th>
+                      <th scope="col" id="cm-col-1">Predicted FAKE</th>
+                      <th scope="col" class="num">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row" id="cm-row-0">Actual REAL</th>
+                      <td class="cm-cell cm-diag" id="cm-00">—</td>
+                      <td class="cm-cell cm-off" id="cm-01">—</td>
+                      <td class="cm-total num" id="cm-row-0-total">—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row" id="cm-row-1">Actual FAKE</th>
+                      <td class="cm-cell cm-off" id="cm-10">—</td>
+                      <td class="cm-cell cm-diag" id="cm-11">—</td>
+                      <td class="cm-total num" id="cm-row-1-total">—</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="band-foot tabular">
+                <span id="cm-type1">—</span>
+                <span id="cm-type2">—</span>
+              </div>
+            </section>
+
+            <section class="perf-subband" aria-labelledby="roc-heading">
+              <div class="band-head">
+                <h3 id="roc-heading">ROC curve</h3>
+                <span class="band-meta tabular" id="roc-auc-foot">—</span>
+              </div>
+              <figure class="roc-figure">
+                <div class="roc-frame">
+                  <img id="roc-img" src="/reports/roc_curve.png" alt="ROC curve on held-out face-gated test set" />
+                </div>
+                <figcaption class="roc-caption">Evaluated across all face-gated held-out test samples.</figcaption>
+              </figure>
+            </section>
+          </div>
+
+          <!-- Sorted Per-source accuracy -->
+          <section class="perf-band" aria-labelledby="source-heading">
+            <div class="band-head">
+              <h3 id="source-heading">Per-source accuracy</h3>
+              <span class="band-meta tabular" id="unseen-tag">—</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table tabular" id="generator-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Source</th>
+                    <th scope="col">Class</th>
+                    <th scope="col" class="num">Images</th>
+                    <th scope="col" class="num bar-col">Accuracy</th>
+                    <th scope="col" class="num">Uncertain</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="band-foot tabular">
+              <span id="gen-foot-left">—</span>
+              <span id="gen-foot-right">—</span>
+            </div>
+          </section>
+
+          <!-- Compact Robustness table -->
+          <section class="perf-band" aria-labelledby="rob-heading">
+            <div class="band-head">
+              <h3 id="rob-heading">Degradation robustness</h3>
+              <span class="band-meta tabular" id="rob-count">—</span>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table tabular" id="robust-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Perturbation</th>
+                    <th scope="col" class="num">Images</th>
+                    <th scope="col" class="num">Before</th>
+                    <th scope="col" class="num bar-col">After (3-view TTA)</th>
+                    <th scope="col" class="num">Delta</th>
+                    <th scope="col" class="num">ROC-AUC</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="band-foot tabular">
+              <span id="rob-foot-left">—</span>
+              <span id="rob-foot-right">—</span>
+            </div>
+          </section>
+
+          <!-- Calibration + Leave-One-Generator-Out -->
+          <div class="perf-two-col">
+            <section class="perf-subband" aria-labelledby="cal-heading">
+              <div class="band-head">
+                <h3 id="cal-heading">Calibration &amp; temperature scaling</h3>
+                <span class="band-meta tabular" id="temp-pill">—</span>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table tabular" id="cal-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Metric</th>
+                      <th scope="col" class="num">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="band-foot tabular">
+                <span>Fitted on held-out validation logits</span>
+                <span id="cal-foot-right">—</span>
+              </div>
+            </section>
+
+            <section class="perf-subband" aria-labelledby="logo-heading">
+              <div class="band-head">
+                <h3 id="logo-heading">Leave-One-Generator-Out (LOGO)</h3>
+                <span class="band-meta tabular" id="logo-tag">—</span>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table tabular" id="logo-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Held-out generator</th>
+                      <th scope="col" class="num">Images</th>
+                      <th scope="col" class="num bar-col">Detection rate</th>
+                      <th scope="col" class="num">ROC-AUC</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                  <tfoot>
+                    <tr id="logo-foot-row" class="foot-summary"></tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div class="band-foot tabular">
+                <span id="logo-foot-left">Trained from scratch with target generator excluded</span>
+                <span id="logo-foot-right">—</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>VeriFake. Built by Prajjwal.</p>
+      <a class="footer-link" href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+  <script src="/static/app.js?v=light-1" defer></script>
+</body>
+</html>
