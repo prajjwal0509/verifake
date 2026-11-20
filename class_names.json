@@ -1,0 +1,14 @@
+{
+  "class_to_idx": {
+    "REAL": 0,
+    "FAKE": 1
+  },
+  "idx_to_class": {
+    "0": "REAL",
+    "1": "FAKE"
+  },
+  "class_names": [
+    "REAL",
+    "FAKE"
+  ]
+}
