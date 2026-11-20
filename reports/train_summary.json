@@ -1,0 +1,114 @@
+{
+  "backbone": "convnext_tiny",
+  "device": "mps",
+  "amp": false,
+  "class_to_idx": {
+    "REAL": 0,
+    "FAKE": 1
+  },
+  "idx_to_class": {
+    "0": "REAL",
+    "1": "FAKE"
+  },
+  "calibration": {
+    "temperature": 0.6095057725906372,
+    "val_n": 1000,
+    "val_nll_before": 0.1129230335354805,
+    "val_nll_after": 0.08487175405025482,
+    "val_ece_before": 0.04606702809408306,
+    "val_ece_after": 0.005727737533859912,
+    "uncertain_band": [
+      0.4,
+      0.6
+    ]
+  },
+  "train_images": 3600,
+  "train_images_available": 11774,
+  "val_images": 1000,
+  "val_images_available": 1335,
+  "best_epoch": 3,
+  "best_val": {
+    "val_accuracy": 0.961,
+    "val_roc_auc": 0.9924924924924925,
+    "val_f1": 0.9479305740987984,
+    "epoch": 3
+  },
+  "epochs_run": 3,
+  "total_train_minutes": 25.4,
+  "hyperparameters": {
+    "backbones": [
+      "convnext_tiny"
+    ],
+    "skip_benchmark": true,
+    "bench_train": 2000,
+    "bench_val": 800,
+    "bench_epochs": 1,
+    "train_subset": 3600,
+    "val_subset": 1000,
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 0.0001,
+    "weight_decay": 0.05,
+    "img_size": 224,
+    "label_smoothing": 0.1,
+    "patience": 2,
+    "workers": 0,
+    "resume_checkpoint": "models/pre_upgrade.pt",
+    "faces_only": true,
+    "balanced_faces": true
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.37499449921978845,
+      "val_loss": 0.2724049985408783,
+      "val_accuracy": 0.879,
+      "val_f1": 0.8561236623067776,
+      "val_roc_auc": 0.9766237666237666,
+      "epoch_seconds": 459.6335129737854,
+      "train_img_per_s": 7.832327057068446
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.3174433524741067,
+      "val_loss": 0.1909872442483902,
+      "val_accuracy": 0.934,
+      "val_f1": 0.9108108108108108,
+      "val_roc_auc": 0.981827541827542,
+      "epoch_seconds": 456.8206219673157,
+      "train_img_per_s": 7.880554919995645
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.25955285078949397,
+      "val_loss": 0.12696778774261475,
+      "val_accuracy": 0.961,
+      "val_f1": 0.9479305740987984,
+      "val_roc_auc": 0.9924924924924925,
+      "epoch_seconds": 466.5932140350342,
+      "train_img_per_s": 7.71550012240361
+    }
+  ],
+  "benchmark": [
+    {
+      "backbone": "efficientnet_b3",
+      "best": {
+        "val_accuracy": 0.715,
+        "val_roc_auc": 0.7814777777777777,
+        "val_f1": 0.7348837209302326,
+        "epoch": 1
+      },
+      "seconds": 3333.3554532527924
+    },
+    {
+      "backbone": "convnext_tiny",
+      "best": {
+        "val_accuracy": 0.73,
+        "val_roc_auc": 0.798888888888889,
+        "val_f1": 0.7395498392282959,
+        "epoch": 1
+      },
+      "seconds": 2714.0508601665497
+    }
+  ]
+}

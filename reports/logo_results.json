@@ -1,0 +1,53 @@
+{
+  "generators": [
+    "DALLE3",
+    "FLUX",
+    "SDXL"
+  ],
+  "train_per_fold": 1200,
+  "val_per_fold": 400,
+  "epochs_per_fold": 2,
+  "folds": [
+    {
+      "generator": "DALLE3",
+      "train_n": 1200,
+      "val_n": 400,
+      "in_dist_val_acc": 0.7925,
+      "held_out_n": 255,
+      "detected_fake": 224,
+      "missed_as_real": 31,
+      "held_out_detection_rate": 0.8784313725490196,
+      "held_out_mean_p_fake": 0.746644935654659,
+      "held_out_roc_auc_vs_real": 0.9448954248366013,
+      "seconds": 388.4
+    },
+    {
+      "generator": "FLUX",
+      "train_n": 1200,
+      "val_n": 400,
+      "in_dist_val_acc": 0.805,
+      "held_out_n": 103,
+      "detected_fake": 80,
+      "missed_as_real": 23,
+      "held_out_detection_rate": 0.7766990291262136,
+      "held_out_mean_p_fake": 0.6462048058515614,
+      "held_out_roc_auc_vs_real": 0.9277184466019418,
+      "seconds": 369.7
+    },
+    {
+      "generator": "SDXL",
+      "train_n": 1200,
+      "val_n": 400,
+      "in_dist_val_acc": 0.7975,
+      "held_out_n": 198,
+      "detected_fake": 172,
+      "missed_as_real": 26,
+      "held_out_detection_rate": 0.8686868686868687,
+      "held_out_mean_p_fake": 0.7388719925374696,
+      "held_out_roc_auc_vs_real": 0.9129713804713805,
+      "seconds": 377.3
+    }
+  ],
+  "mean_detection_rate": 0.841272423454034,
+  "mean_roc_auc_vs_real": 0.9285284173033078
+}
