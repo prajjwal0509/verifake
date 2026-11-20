@@ -1,0 +1,12 @@
+{
+  "temperature": 0.6095057725906372,
+  "val_n": 1000,
+  "val_nll_before": 0.1129230335354805,
+  "val_nll_after": 0.08487175405025482,
+  "val_ece_before": 0.04606702809408306,
+  "val_ece_after": 0.005727737533859912,
+  "uncertain_band": [
+    0.4,
+    0.6
+  ]
+}
