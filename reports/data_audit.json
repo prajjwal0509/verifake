@@ -1,0 +1,686 @@
+{
+  "dedup": {
+    "input_rows": 33951,
+    "exact_sha_dropped": 0,
+    "exact_pixel_dropped": 0,
+    "cross_class_conflicts_dropped": 0,
+    "output_rows": 33951,
+    "unique_clusters": 33886,
+    "near_dup_clusters": 64,
+    "near_dup_extra_rows": 65
+  },
+  "val_generators": [
+    "flux"
+  ],
+  "test_generators": [
+    "midjourney",
+    "gpt_image_1"
+  ],
+  "split_counts": [
+    {
+      "split": "held_out_test",
+      "split_role": "seen_test_generator",
+      "class_name": "FAKE",
+      "count": 2911
+    },
+    {
+      "split": "held_out_test",
+      "split_role": "test_real",
+      "class_name": "REAL",
+      "count": 3674
+    },
+    {
+      "split": "held_out_test",
+      "split_role": "unseen_test_generator",
+      "class_name": "FAKE",
+      "count": 3230
+    },
+    {
+      "split": "train",
+      "split_role": "train",
+      "class_name": "FAKE",
+      "count": 10182
+    },
+    {
+      "split": "train",
+      "split_role": "train",
+      "class_name": "REAL",
+      "count": 8817
+    },
+    {
+      "split": "val",
+      "split_role": "seen_val_generator",
+      "class_name": "FAKE",
+      "count": 1457
+    },
+    {
+      "split": "val",
+      "split_role": "unseen_val_generator",
+      "class_name": "FAKE",
+      "count": 1472
+    },
+    {
+      "split": "val",
+      "split_role": "val_real",
+      "class_name": "REAL",
+      "count": 2208
+    }
+  ],
+  "matched_sampling": {
+    "train_face_rows": 12052,
+    "matched_cells": 3,
+    "unmatched_cells": [
+      "257-512:landscape",
+      "257-512:portrait",
+      "513-1024:landscape",
+      "513-1024:portrait",
+      "<=256:landscape",
+      "<=256:portrait",
+      ">1024:landscape",
+      ">1024:portrait",
+      ">1024:square"
+    ],
+    "matched_row_coverage": 0.7720710255559243,
+    "cells": [
+      {
+        "cell": "257-512:landscape",
+        "n_real": 46,
+        "n_fake": 0
+      },
+      {
+        "cell": "257-512:portrait",
+        "n_real": 21,
+        "n_fake": 0
+      },
+      {
+        "cell": "257-512:square",
+        "n_real": 13,
+        "n_fake": 354
+      },
+      {
+        "cell": "513-1024:landscape",
+        "n_real": 227,
+        "n_fake": 0
+      },
+      {
+        "cell": "513-1024:portrait",
+        "n_real": 103,
+        "n_fake": 0
+      },
+      {
+        "cell": "513-1024:square",
+        "n_real": 1227,
+        "n_fake": 1657
+      },
+      {
+        "cell": "<=256:landscape",
+        "n_real": 10,
+        "n_fake": 0
+      },
+      {
+        "cell": "<=256:portrait",
+        "n_real": 2105,
+        "n_fake": 0
+      },
+      {
+        "cell": "<=256:square",
+        "n_real": 3607,
+        "n_fake": 2447
+      },
+      {
+        "cell": ">1024:landscape",
+        "n_real": 84,
+        "n_fake": 0
+      },
+      {
+        "cell": ">1024:portrait",
+        "n_real": 147,
+        "n_fake": 0
+      },
+      {
+        "cell": ">1024:square",
+        "n_real": 4,
+        "n_fake": 0
+      }
+    ]
+  },
+  "leakage_audit": {
+    "raw_all": {
+      "n": 33951,
+      "auroc": 0.9263780126015659,
+      "accuracy": 0.8347029542576065,
+      "top_features": [
+        {
+          "feature": "min_side",
+          "auc_drop": 0.1807
+        },
+        {
+          "feature": "aspect_ratio",
+          "auc_drop": 0.0716
+        },
+        {
+          "feature": "height",
+          "auc_drop": 0.048
+        },
+        {
+          "feature": "max_side",
+          "auc_drop": 0.0105
+        },
+        {
+          "feature": "bpp",
+          "auc_drop": 0.0102
+        },
+        {
+          "feature": "width",
+          "auc_drop": 0.0101
+        },
+        {
+          "feature": "file_bytes",
+          "auc_drop": 0.0062
+        },
+        {
+          "feature": "format_code",
+          "auc_drop": 0.0
+        },
+        {
+          "feature": "has_exif",
+          "auc_drop": 0.0
+        }
+      ]
+    },
+    "raw_face": {
+      "n": 20804,
+      "auroc": 0.8457290956896137,
+      "accuracy": 0.7779273216689099,
+      "top_features": [
+        {
+          "feature": "min_side",
+          "auc_drop": 0.1415
+        },
+        {
+          "feature": "file_bytes",
+          "auc_drop": 0.0863
+        },
+        {
+          "feature": "height",
+          "auc_drop": 0.0782
+        },
+        {
+          "feature": "max_side",
+          "auc_drop": 0.0456
+        },
+        {
+          "feature": "width",
+          "auc_drop": 0.0361
+        },
+        {
+          "feature": "aspect_ratio",
+          "auc_drop": 0.0193
+        },
+        {
+          "feature": "bpp",
+          "auc_drop": 0.012
+        },
+        {
+          "feature": "format_code",
+          "auc_drop": 0.0
+        },
+        {
+          "feature": "has_exif",
+          "auc_drop": 0.0
+        }
+      ]
+    },
+    "harmonized_mixed_face": {
+      "n": 700,
+      "raw": {
+        "n": 700,
+        "auroc": 0.7922734693877551,
+        "accuracy": 0.6714285714285714,
+        "top_features": [
+          {
+            "feature": "file_bytes",
+            "auc_drop": 0.1009
+          },
+          {
+            "feature": "width",
+            "auc_drop": 0.0457
+          },
+          {
+            "feature": "aspect_ratio",
+            "auc_drop": 0.0299
+          },
+          {
+            "feature": "bpp",
+            "auc_drop": 0.013
+          },
+          {
+            "feature": "min_side",
+            "auc_drop": 0.0064
+          },
+          {
+            "feature": "height",
+            "auc_drop": 0.0004
+          },
+          {
+            "feature": "format_code",
+            "auc_drop": 0.0
+          },
+          {
+            "feature": "has_exif",
+            "auc_drop": 0.0
+          },
+          {
+            "feature": "max_side",
+            "auc_drop": -0.0013
+          }
+        ]
+      },
+      "harmonized": {
+        "n": 700,
+        "auroc": 0.6875959183673469,
+        "accuracy": 0.6214285714285714,
+        "top_features": [
+          {
+            "feature": "max_side",
+            "auc_drop": 0.0954
+          },
+          {
+            "feature": "width",
+            "auc_drop": 0.0751
+          },
+          {
+            "feature": "min_side",
+            "auc_drop": 0.0424
+          },
+          {
+            "feature": "file_bytes",
+            "auc_drop": 0.0133
+          },
+          {
+            "feature": "aspect_ratio",
+            "auc_drop": 0.0089
+          },
+          {
+            "feature": "bpp",
+            "auc_drop": 0.0043
+          },
+          {
+            "feature": "format_code",
+            "auc_drop": 0.0016
+          },
+          {
+            "feature": "has_exif",
+            "auc_drop": 0.0
+          },
+          {
+            "feature": "height",
+            "auc_drop": -0.0049
+          }
+        ]
+      }
+    },
+    "harmonized_hires_face_512plus": {
+      "n": 700,
+      "raw": {
+        "n": 700,
+        "auroc": 0.8867102040816328,
+        "accuracy": 0.8242857142857143,
+        "top_features": [
+          {
+            "feature": "file_bytes",
+            "auc_drop": 0.1111
+          },
+          {
+            "feature": "bpp",
+            "auc_drop": 0.0906
+          },
+          {
+            "feature": "width",
+            "auc_drop": 0.0807
+          },
+          {
+            "feature": "min_side",
+            "auc_drop": 0.0441
+          },
+          {
+            "feature": "max_side",
+            "auc_drop": 0.0083
+          },
+          {
+            "feature": "height",
+            "auc_drop": 0.0026
+          },
+          {
+            "feature": "aspect_ratio",
+            "auc_drop": 0.0016
+          },
+          {
+            "feature": "format_code",
+            "auc_drop": 0.0
+          },
+          {
+            "feature": "has_exif",
+            "auc_drop": 0.0
+          }
+        ]
+      },
+      "harmonized": {
+        "n": 700,
+        "auroc": 0.5788571428571428,
+        "accuracy": 0.56,
+        "top_features": [
+          {
+            "feature": "file_bytes",
+            "auc_drop": 0.0353
+          },
+          {
+            "feature": "bpp",
+            "auc_drop": 0.0109
+          },
+          {
+            "feature": "width",
+            "auc_drop": 0.0068
+          },
+          {
+            "feature": "height",
+            "auc_drop": 0.0033
+          },
+          {
+            "feature": "format_code",
+            "auc_drop": 0.0013
+          },
+          {
+            "feature": "max_side",
+            "auc_drop": 0.0
+          },
+          {
+            "feature": "has_exif",
+            "auc_drop": 0.0
+          },
+          {
+            "feature": "min_side",
+            "auc_drop": -0.0074
+          },
+          {
+            "feature": "aspect_ratio",
+            "auc_drop": -0.0449
+          }
+        ]
+      }
+    },
+    "source_profiles": [
+      {
+        "class_name": "FAKE",
+        "generator": "DALLE3",
+        "generator_family": "dalle3",
+        "n_total": 3550,
+        "n_face": 853,
+        "formats": {
+          "JPEG": 3550
+        },
+        "med_max_side": 270,
+        "p10_max_side": 270,
+        "p90_max_side": 1024,
+        "square_pct": 100.0,
+        "med_bpp": 3.42,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "FLUX",
+        "generator_family": "flux",
+        "n_total": 1072,
+        "n_face": 398,
+        "formats": {
+          "JPEG": 1072
+        },
+        "med_max_side": 1024,
+        "p10_max_side": 1024,
+        "p90_max_side": 1024,
+        "square_pct": 100.0,
+        "med_bpp": 1.95,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "FLUX_OpenFake",
+        "generator_family": "flux",
+        "n_total": 400,
+        "n_face": 400,
+        "formats": {
+          "JPEG": 400
+        },
+        "med_max_side": 1024,
+        "p10_max_side": 1024,
+        "p90_max_side": 1216,
+        "square_pct": 37.2,
+        "med_bpp": 1.68,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "GPT_Image_1",
+        "generator_family": "gpt_image_1",
+        "n_total": 260,
+        "n_face": 260,
+        "formats": {
+          "JPEG": 260
+        },
+        "med_max_side": 1536,
+        "p10_max_side": 1024,
+        "p90_max_side": 1536,
+        "square_pct": 27.7,
+        "med_bpp": 1.85,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "Midjourney",
+        "generator_family": "midjourney",
+        "n_total": 2970,
+        "n_face": 749,
+        "formats": {
+          "JPEG": 2970
+        },
+        "med_max_side": 436,
+        "p10_max_side": 436,
+        "p90_max_side": 1024,
+        "square_pct": 99.9,
+        "med_bpp": 1.95,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "SD21",
+        "generator_family": "sd21",
+        "n_total": 2500,
+        "n_face": 568,
+        "formats": {
+          "JPEG": 2500
+        },
+        "med_max_side": 768,
+        "p10_max_side": 768,
+        "p90_max_side": 768,
+        "square_pct": 100.0,
+        "med_bpp": 2.3,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "SD3",
+        "generator_family": "sd3",
+        "n_total": 2500,
+        "n_face": 696,
+        "formats": {
+          "JPEG": 2500
+        },
+        "med_max_side": 1024,
+        "p10_max_side": 1024,
+        "p90_max_side": 1024,
+        "square_pct": 100.0,
+        "med_bpp": 1.97,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "SDXL",
+        "generator_family": "sdxl",
+        "n_total": 2500,
+        "n_face": 716,
+        "formats": {
+          "JPEG": 2500
+        },
+        "med_max_side": 1024,
+        "p10_max_side": 1024,
+        "p90_max_side": 1024,
+        "square_pct": 100.0,
+        "med_bpp": 1.61,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "FAKE",
+        "generator": "StyleGAN",
+        "generator_family": "stylegan",
+        "n_total": 3500,
+        "n_face": 3500,
+        "formats": {
+          "JPEG": 3500
+        },
+        "med_max_side": 256,
+        "p10_max_side": 256,
+        "p90_max_side": 256,
+        "square_pct": 100.0,
+        "med_bpp": 3.43,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "REAL",
+        "generator": "COCO",
+        "generator_family": "real",
+        "n_total": 2500,
+        "n_face": 472,
+        "formats": {
+          "JPEG": 2500
+        },
+        "med_max_side": 640,
+        "p10_max_side": 500,
+        "p90_max_side": 640,
+        "square_pct": 3.9,
+        "med_bpp": 2.74,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "REAL",
+        "generator": "CelebA",
+        "generator_family": "real",
+        "n_total": 3499,
+        "n_face": 3498,
+        "formats": {
+          "JPEG": 3499
+        },
+        "med_max_side": 218,
+        "p10_max_side": 218,
+        "p90_max_side": 218,
+        "square_pct": 0.0,
+        "med_bpp": 3.53,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "REAL",
+        "generator": "CelebA_HQ",
+        "generator_family": "real",
+        "n_total": 2000,
+        "n_face": 1994,
+        "formats": {
+          "JPEG": 2000
+        },
+        "med_max_side": 1024,
+        "p10_max_side": 1024,
+        "p90_max_side": 1024,
+        "square_pct": 100.0,
+        "med_bpp": 1.2,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "REAL",
+        "generator": "FFHQ",
+        "generator_family": "real",
+        "n_total": 6000,
+        "n_face": 6000,
+        "formats": {
+          "JPEG": 6000
+        },
+        "med_max_side": 256,
+        "p10_max_side": 256,
+        "p90_max_side": 256,
+        "square_pct": 100.0,
+        "med_bpp": 3.5,
+        "exif_pct": 0.0
+      },
+      {
+        "class_name": "REAL",
+        "generator": "OpenFake_Real",
+        "generator_family": "real",
+        "n_total": 700,
+        "n_face": 700,
+        "formats": {
+          "JPEG": 700
+        },
+        "med_max_side": 1366,
+        "p10_max_side": 327,
+        "p90_max_side": 6016,
+        "square_pct": 9.4,
+        "med_bpp": 1.67,
+        "exif_pct": 0.0
+      }
+    ]
+  },
+  "public_datasets": [
+    {
+      "name": "GenImage",
+      "source_url": "https://github.com/GenImage-Dataset/GenImage (HF mirror: nebula/GenImage-arrow)",
+      "license": "CC BY-NC-SA 4.0 (Non-commercial research)",
+      "availability": "Public benchmark (~1M image pairs across 8 generators)",
+      "generators": "Midjourney, SD 1.4, SD 1.5, ADM, GLIDE, VQDM, BigGAN, Wukong",
+      "real_sources": "ImageNet ILSVRC2012",
+      "cli_flag": "--genimage-dir /path/to/GenImage"
+    },
+    {
+      "name": "Synthbuster",
+      "source_url": "Zenodo record 10066460 (+ RAISE-1k real raw images)",
+      "license": "CC-BY-4.0 (Synthbuster); check RAISE-1k research license",
+      "availability": "Public on Zenodo (~9,000 lossless PNGs)",
+      "generators": "DALL-E 2, DALL-E 3, Adobe Firefly, Midjourney v5, SD 1.3, SD 1.4, SD 2, SDXL, GLIDE",
+      "real_sources": "RAISE-1k (raw DSLR photos, separate download)",
+      "cli_flag": "--synthbuster-dir /path/to/synthbuster --raise1k-dir /path/to/raise1k"
+    },
+    {
+      "name": "Community Forensics",
+      "source_url": "huggingface.co/datasets/OwensLab/CommunityForensics (-Small / PublicEval)",
+      "license": "CC BY-NC-SA 4.0 / Non-commercial + underlying generator model licenses",
+      "availability": "Public on Hugging Face (~1.1 TB full / ~278 GB Small Parquet)",
+      "generators": "4,803 open & commercial image generators",
+      "real_sources": "Redistributable real sets in Small & PublicEval (e.g., COCO/FFHQ)",
+      "cli_flag": "Extract/stream or pass extracted folders via --user-real-dir / --user-fake-dir"
+    },
+    {
+      "name": "WildRF",
+      "source_url": "github.com/barcavia/RealTime-DeepfakeDetection-in-the-RealWorld",
+      "license": "Check author repository terms (academic research)",
+      "availability": "Public links via author GitHub repo (social-media in-the-wild)",
+      "generators": "Wild AI images from Reddit, X/Twitter, Facebook",
+      "real_sources": "Wild real photos from Reddit, X/Twitter, Facebook",
+      "cli_flag": "--wildrf-dir /path/to/WildRF"
+    },
+    {
+      "name": "OpenFake",
+      "source_url": "huggingface.co/datasets/ComplexDataLab/OpenFake",
+      "license": "Verify Hugging Face dataset card terms before commercial use",
+      "availability": "Partially ingested locally (1,620 rows in multi_manifest.csv)",
+      "generators": "GPT_Image_1, FLUX variants, Midjourney 6",
+      "real_sources": "OpenFake_Real (LAION, Pexels)",
+      "cli_flag": "Already present in data/multi_manifest.csv"
+    }
+  ]
+}
