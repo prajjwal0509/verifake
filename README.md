@@ -1,3 +1,15 @@
+---
+title: VeriFake
+emoji: 🔍
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Real vs. AI-generated face detector (CLIP + ConvNeXt)
+---
+
 # VeriFake
 
 VeriFake checks whether a face portrait is real or AI-generated using an ensemble of frozen CLIP ViT-L/14 features and a fine-tuned ConvNeXt-Tiny classifier trained on real photos, diffusion generators, GANs, and face-swap deepfakes.
@@ -94,6 +106,15 @@ The first run with the default ensemble downloads `vit_large_patch14_clip_224.op
 ```bash
 DEEPFAKE_NO_BROWSER=1 DEEPFAKE_PORT=8000 python -m app.main
 curl -F "file=@path/to/portrait.jpg" http://127.0.0.1:8000/predict
+```
+
+### Deploy on Hugging Face Spaces
+
+The repository includes a CPU PyTorch `Dockerfile` and Hugging Face Spaces Docker SDK metadata (`sdk: docker`, `app_port: 7860`). Because the default v2 ensemble (`CLIP ViT-L/14` + `ConvNeXt-Tiny v2`) uses ~3–4 GB RAM, deploy on **CPU basic (2 vCPU, 16 GB RAM, Free)**:
+
+```bash
+git remote add hf https://huggingface.co/spaces/<username>/<space-name>
+git push hf main
 ```
 
 The test suite and evaluation scripts expect the local dataset under `data/` (excluded from git):

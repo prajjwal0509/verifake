@@ -59,11 +59,8 @@ def _pick_port(host: str, preferred: int = 8000) -> int:
 
 
 HOST = os.environ.get("DEEPFAKE_HOST", "127.0.0.1")
-PORT = (
-    int(os.environ["DEEPFAKE_PORT"])
-    if "DEEPFAKE_PORT" in os.environ
-    else _pick_port(HOST, 8000)
-)
+_ENV_PORT = os.environ.get("DEEPFAKE_PORT") or os.environ.get("PORT")
+PORT = int(_ENV_PORT) if _ENV_PORT else _pick_port(HOST, 8000)
 URL = f"http://localhost:{PORT}"
 STATIC_DIR = PROJECT_ROOT / "app" / "static"
 MAX_BYTES = MAX_UPLOAD_BYTES
