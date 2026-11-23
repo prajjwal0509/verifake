@@ -1,0 +1,23 @@
+{
+  "temperature": 1.000003695487976,
+  "bias": 0.8536730408668518,
+  "decision_threshold": 0.49661796293741767,
+  "target_val_fpr": 0.04,
+  "actual_val_real_fpr": 0.0395738203957382,
+  "uncertain_band": [
+    0.3627314602645104,
+    0.6309912514801703
+  ],
+  "band_half_logit": 0.55,
+  "view_disagreement_margin": 0.85,
+  "branch_disagreement_margin": 1.15,
+  "best_clip_branch": "clip_mlp",
+  "clip_weight": 0.65,
+  "convnext_weight": 0.35,
+  "ood_weight_selected": true,
+  "val_n": 5451,
+  "val_nll_before": 0.196400448679924,
+  "val_nll_after": 0.17243915796279907,
+  "val_ece_before": 0.008649121581373315,
+  "val_ece_after": 0.02169368347766631
+}

@@ -40,10 +40,13 @@ Thumbs.db
 # Local design mockups
 design/
 
-# Non-final model checkpoints (keep final best.pt via Git LFS)
+# Non-final model checkpoints (keep final best.pt and v2 ensemble checkpoints via Git LFS)
 *.pt
 *.pth
 *.ckpt
 *.safetensors
 models/*.pt
 !models/best.pt
+!models/clip_linear_v2.pt
+!models/clip_mlp_v2.pt
+!models/convnext_v2.pt

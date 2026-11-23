@@ -25,10 +25,16 @@ from src.image_io import (
     decode_image_bytes,
     register_image_plugins,
 )
+from src.ensemble_inference import (
+    STEP3_ENSEMBLE_PATH,
+    STEP4_CALIBRATION_PATH,
+    EnsembleDeepfakeDetector,
+)
 from src.inference import DeepfakeDetector
 from src.utils import (
     CLASS_NAMES_PATH,
     METRICS_PATH,
+    MODELS_DIR,
     PROJECT_ROOT,
     REPORTS_DIR,
     get_logger,
@@ -64,7 +70,12 @@ MAX_BYTES = MAX_UPLOAD_BYTES
 
 register_image_plugins()
 
-state: dict[str, Any] = {"detector": None, "class_mapping": None, "load_error": None}
+state: dict[str, Any] = {
+    "detector": None,
+    "detector_mode": None,
+    "class_mapping": None,
+    "load_error": None,
+}
 
 
 def _open_browser_when_ready(url: str, port: int, timeout: float = 20.0) -> None:
@@ -91,13 +102,31 @@ def _open_browser_when_ready(url: str, port: int, timeout: float = 20.0) -> None
     webbrowser.open(url, new=2)
 
 
+def _ensemble_artifacts_ready() -> bool:
+    return (
+        STEP3_ENSEMBLE_PATH.exists()
+        and STEP4_CALIBRATION_PATH.exists()
+        and (MODELS_DIR / "clip_mlp_v2.pt").exists()
+        and (MODELS_DIR / "convnext_v2.pt").exists()
+    )
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Load class mapping and detector at startup."""
     register_image_plugins()
     try:
         state["class_mapping"] = load_class_mapping(CLASS_NAMES_PATH)
-        state["detector"] = await run_in_threadpool(DeepfakeDetector)
+        pref = os.environ.get("VERIFAKE_DETECTOR", "auto").strip().lower()
+        use_ensemble = (pref == "ensemble") or (
+            pref == "auto" and _ensemble_artifacts_ready()
+        )
+        if use_ensemble:
+            state["detector"] = await run_in_threadpool(EnsembleDeepfakeDetector)
+            state["detector_mode"] = "ensemble"
+        else:
+            state["detector"] = await run_in_threadpool(DeepfakeDetector)
+            state["detector_mode"] = "legacy"
     except (
         Exception
     ) as exc:  # Keep serving the UI with a degraded status if weights fail to load.
@@ -125,18 +154,26 @@ async def index() -> FileResponse:
 @app.get("/api/health")
 async def health() -> dict[str, Any]:
     """Return liveness and detector configuration."""
-    det: Optional[DeepfakeDetector] = state["detector"]
+    det = state["detector"]
+    mode = state.get("detector_mode") or (
+        "ensemble" if isinstance(det, EnsembleDeepfakeDetector) else "legacy"
+    )
+    band = list(getattr(det, "uncertain_band", [0.40, 0.60])) if det else [0.40, 0.60]
+    thr = float(getattr(det, "decision_threshold", 0.5)) if det else None
+    tta_views = 2 if isinstance(det, EnsembleDeepfakeDetector) else 3
     return {
         "status": "ok" if det else "degraded",
         "model_loaded": det is not None,
+        "detector_mode": mode if det else None,
         "model": det.meta["backbone"] if det else None,
         "device": str(det.device) if det else None,
         "class_to_idx": det.class_to_idx if det else None,
         "class_names": det.class_names if det else None,
         "temperature": det.temperature if det else None,
-        "uncertain_band": [0.40, 0.60],
+        "decision_threshold": thr,
+        "uncertain_band": band,
         "face_gate": True,
-        "tta_views": 3,
+        "tta_views": tta_views,
         "max_upload_mb": MAX_BYTES // (1024 * 1024),
         "max_image_side": MAX_IMAGE_SIDE,
         "max_image_pixels": MAX_IMAGE_PIXELS,
@@ -162,8 +199,8 @@ def _validate_and_decode(data: bytes) -> tuple[Image.Image, str]:
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)) -> dict[str, Any]:
-    """Verify provenance, detect face, and run 3-view TTA with Grad-CAM."""
-    det: Optional[DeepfakeDetector] = state["detector"]
+    """Verify provenance, detect face, and run calibrated inference with Grad-CAM."""
+    det = state["detector"]
     if det is None:
         raise HTTPException(503, f"Model not loaded: {state['load_error']}")
     data = await file.read(MAX_BYTES + 1)
