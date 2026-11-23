@@ -1,10 +1,10 @@
 # VeriFake
 
-VeriFake checks whether a face portrait is real or AI-generated using a ConvNeXt-Tiny classifier trained on real photos and diffusion and GAN generators.
+VeriFake checks whether a face portrait is real or AI-generated using an ensemble of frozen CLIP ViT-L/14 features and a fine-tuned ConvNeXt-Tiny classifier trained on real photos, diffusion generators, GANs, and face-swap deepfakes.
 
 ## What it does
 
-You upload a portrait in a browser or via `POST /predict` in JPEG, PNG, WEBP, BMP, TIFF, GIF, AVIF, or HEIC/HEIF up to 15 MB. First, a YuNet detector verifies that the image actually contains a human face so the classifier does not guess on landscapes or objects. For valid faces, the model scores three views of the image, applies validation-fitted temperature scaling to output calibrated probabilities and an uncertain band (`0.40` to `0.60`), and computes a Grad-CAM overlay highlighting which regions drove the score. Content Credentials (C2PA / JUMBF / XMP / EXIF) are inspected separately as supporting provenance evidence and never change the pixel prediction. Images are processed in memory and not stored.
+You upload a portrait in a browser or via `POST /predict` in JPEG, PNG, WEBP, BMP, TIFF, GIF, AVIF, or HEIC/HEIF up to 15 MB. First, a YuNet detector verifies that the image actually contains a human face so the classifier does not guess on landscapes or objects. By default (`VERIFAKE_DETECTOR=auto`), the v2 detector (`src/ensemble_inference.py`) evaluates both the face crop and full frame through a frozen CLIP ViT-L/14 MLP probe (`w = 0.65`) and a fine-tuned ConvNeXt-Tiny v2 model (`w = 0.35`), applies bounded validation calibration (`T = 1.0000`, `b = +0.8537`), and abstains to `UNCERTAIN` when views disagree, branches disagree, or confidence falls in the uncertain band (`[0.3627, 0.6310]`). Visual attribution uses Grad-CAM over ConvNeXt feature maps, while Content Credentials (C2PA / JUMBF / XMP / EXIF) are checked separately (`VERIFAKE_DETECTOR=legacy` switches back to the single-branch `models/best.pt` model). Images are processed in memory and not stored.
 
 ![VeriFake analysis screen showing an AI-generated verdict and Grad-CAM heatmap](assets/ui_fake.png)
 
@@ -41,6 +41,20 @@ Per-source accuracy across the test split and held-out unseen Midjourney set:
 | Midjourney (unseen) | FAKE | 489 | 95.50% | 9 |
 | COCO | REAL | 134 | 59.70% | 7 |
 
+### v2 Ensemble & Calibration (`reports/step3/` & `reports/step4/`)
+
+To improve generalization to unseen generators and modern compression/resizing without aspect distortion, I built a leak-free generator-family split (`data/prepared_manifest_v2.csv`, keeping `flux` strictly for unseen validation and `Midjourney` + `GPT_Image_1` strictly for held-out testing), ran 6-fold leave-one-generator-out comparisons (`reports/step3/logo_comparison.md`, where `ensemble` won with mean `71.5%` clean recall and `73.1%` perturbed recall at `<= 5%` validation FPR; LOGO score `0.8223`), and added OOD weight selection + view/branch-disagreement abstention (`reports/step4/calibration_report.md`):
+
+| Metric (`5,435`-image held-out test) | Value | Notes |
+| --- | ---: | --- |
+| Overall ROC-AUC | 0.9896 | `CLIP-L/14 (0.65) + ConvNeXt-v2 (0.35)` |
+| Binary Recall / Real FPR (all @ `0.4966`) | 92.6% / 3.7% | Threshold chosen for `<= 4%` `val_real` FPR (`3.96%`) |
+| Decided Recall / Decided Real FPR | 96.1% / 2.0% | On 4,942 decisive predictions |
+| `UNCERTAIN` abstentions | 9.1% (493 / 5,435) | 59 view, 246 branch, 191 borderline (`30.0%` binary error rate on abstained samples) |
+| Unseen `Midjourney` decided recall (`n = 749`) | 99.3% | ROC-AUC `0.9953` (`96.8%` binary) |
+| Unseen `GPT_Image_1` decided recall (`n = 259`) | 98.7% | ROC-AUC `0.9906` (`95.0%` binary, up from `54.7%` before v2 expansion) |
+| Perturbation sweep ROC-AUC (`30`/source) | 0.9833–0.9925 | Decided recall `97.1%`–`99.2%` across `original`, `jpeg_q50`, `webp_q80`, `512px`, `256px`, and `512px + q75` |
+
 ## How it works
 
 I pooled images from five public datasets and removed 7 byte- and pixel-level duplicates (SHA-256 and decoded RGB MD5), leaving 32,331 unique images. Before any split, I held out every Midjourney image (`unseen_generator`, 2,710 total, 489 with detected faces) so I could measure performance on a generator family never seen in training or validation. The remaining images were split 70/30 stratified jointly by source generator and label (`18,660` train pool, `8,887` test), with 10% of the train pool (`2,074`) held out for validation (`src/data.py`). Keeping the 30% test set strictly untouched meant every design choice rested on validation scores rather than test leakage.
@@ -53,7 +67,7 @@ Raw logits from neural nets are often overconfident, so I fitted single-paramete
 
 ## Run it
 
-Model weights (`106 MB`) are stored with Git LFS, so initialize Git LFS before cloning:
+Model weights are stored with Git LFS, so initialize Git LFS before cloning:
 
 ```bash
 git lfs install
@@ -75,14 +89,14 @@ Start the FastAPI web app (opens http://localhost:8000 in your browser):
 python -m app.main
 ```
 
-To run headless on a specific port or send a single image from the terminal:
+The first run with the default ensemble downloads `vit_large_patch14_clip_224.openai` weights once from Hugging Face into `.cache/huggingface/`. To run offline afterward, set `HF_HUB_OFFLINE=1`; to use the legacy single-branch checkpoint (`models/best.pt`), set `VERIFAKE_DETECTOR=legacy`. To run headless on a specific port or send a single image from the terminal:
 
 ```bash
 DEEPFAKE_NO_BROWSER=1 DEEPFAKE_PORT=8000 python -m app.main
 curl -F "file=@path/to/portrait.jpg" http://127.0.0.1:8000/predict
 ```
 
-The test suite and evaluation scripts expect the local dataset under `data/` (`data/multi_manifest.csv` and image files, excluded from git):
+The test suite and evaluation scripts expect the local dataset under `data/` (excluded from git):
 
 ```bash
 python -m unittest discover -s tests -v
@@ -91,10 +105,11 @@ python -m src.evaluate --checkpoint models/best.pt
 
 ## Known issues
 
-- Unseen generator drop: When I ran 3-fold leave-one-generator-out benchmarks (`reports/logo_results.json`), holding out one diffusion model at a time along with Midjourney, mean detection dropped to `84.13%` (`87.84%` on DALLE3, `86.87%` on SDXL, and `77.67%` on FLUX; mean ROC-AUC `0.9285`). That is 12 to 21 percentage points lower than when those generators are included in training (`99.0%` to `99.5%`). On held-out Midjourney (`489` faces), `22` were misclassified as real and `9` fell in the uncertain band.
-- Faces only: Any photo where YuNet finds no face is rejected out of scope (`3,301` of `8,887` test images and `2,221` of `2,710` Midjourney images).
-- Weak on in-the-wild COCO scenes: `616` of `750` COCO test images had no detected face, and accuracy on the remaining `134` face crops is `59.70%`, well below `96.17%` on FFHQ and `98.83%` on CelebA-HQ.
-- Compression and downscaling trade-offs: On the 600-image degradation test slice (`3`-view TTA), `0.25x` resizing drops accuracy to `89.17%`, Gaussian blur (`sigma = 1.5`) to `90.17%`, `0.5x` resizing to `90.83%`, and the social-media re-encoding chain to `92.17%` (versus `93.17%` on the unperturbed slice). Training with heavy degradations also nudged clean held-out test accuracy slightly down from `96.92%` (`reports/before_metrics.json`) to `96.26%`.
+- Unseen generator drop: In the 3-fold v1 leave-one-generator-out benchmark (`reports/logo_results.json`), mean detection dropped to `84.13%`, and in the 6-fold v2 LOGO benchmark (`reports/step3/logo_comparison.md`), holding out `stylegan` while training only on diffusion generators dropped ConvNeXt-Tiny to `0.4697` AUROC (`0.6%` recall at `<= 5%` FPR) vs `0.7766` for `clip_mlp`.
+- OpenFake real and StyleGAN trade-offs in v2: Adding modern OpenFake generators with higher OOD weight on CLIP raised unseen `GPT_Image_1` decided recall to `98.7%`, but increased `OpenFake_Real` (`n = 175`) false positives to `31.0%` decided (`33.7%` binary) and lowered `StyleGAN` (`n = 701`) binary recall to `82.3%` (`86.5%` decided, `29.0%` `UNCERTAIN`).
+- Faces only: Any photo where YuNet finds no face is rejected out of scope (`3,301` of `8,887` v1 test images and `2,221` of `2,710` Midjourney images).
+- Weak on in-the-wild COCO scenes: `616` of `750` COCO test images had no detected face; on `COCO` faces, v1 accuracy was `59.70%` and v2 decided false positive rate is `7.6%` (`12.9%` binary, `20.5%` `UNCERTAIN`).
+- Compression and downscaling trade-offs: On the 600-image v1 degradation slice, `0.25x` resizing dropped accuracy to `89.17%`; on the v2 ensemble, `downscale_256` decided real FPR is `5.0%` with `99.2%` decided recall (`94.4%` binary).
 - Fragile metadata: Messaging platforms usually strip C2PA manifests on upload, and EXIF camera fields can be altered, so missing credentials do not imply an image is real.
 
 ## Project structure
@@ -106,13 +121,19 @@ python -m src.evaluate --checkpoint models/best.pt
 │   └── static/              # HTML/CSS/JS frontend and self-hosted fonts
 ├── assets/                  # UI screenshots used in README
 ├── models/
-│   ├── best.pt              # Final ConvNeXt-Tiny checkpoint (Git LFS)
-│   ├── calibration.json     # Validation-fitted temperature parameter
+│   ├── best.pt              # v1 ConvNeXt-Tiny checkpoint (Git LFS)
+│   ├── clip_linear_v2.pt    # v2 CLIP ViT-L/14 linear probe (Git LFS)
+│   ├── clip_mlp_v2.pt       # v2 CLIP ViT-L/14 MLP probe (Git LFS)
+│   ├── convnext_v2.pt       # v2 ConvNeXt-Tiny checkpoint (Git LFS)
+│   ├── calibration.json     # v1 temperature parameter
+│   ├── step3_ensemble.json  # v2 ensemble configuration
+│   ├── step4_calibration.json # v2 OOD weight, shift/temperature calibration & thresholds
 │   ├── class_names.json     # Explicit REAL/FAKE index mapping
 │   └── face_detection_yunet_2023mar.onnx
-├── reports/                 # Saved evaluation metrics and PNG plots
-├── src/                     # Data pipeline, training, calibration, Grad-CAM, provenance
-├── tests/                   # Unit and format regression tests
+├── reports/                 # Saved metrics, LOGO & held-out reports, PNG plots
+├── scripts/                 # Audit, dataset preparation, feature caching, LOGO & calibration scripts
+├── src/                     # Data pipeline, augmentations, CLIP/ConvNeXt models, Grad-CAM, provenance
+├── tests/                   # Unit, data-leakage, format, and ensemble regression tests
 ├── requirements.txt
 └── LICENSE
 ```
@@ -124,3 +145,5 @@ python -m src.evaluate --checkpoint models/best.pt
 - [Rapidata/Flux_SD3_MJ_Dalle_Human_Coherence_Dataset](https://huggingface.co/datasets/Rapidata/Flux_SD3_MJ_Dalle_Human_Coherence_Dataset) (`FLUX`, `DALLE3`, `Midjourney` fake)
 - [flwrlabs/celeba](https://huggingface.co/datasets/flwrlabs/celeba) (`CelebA` real portraits)
 - [mattymchen/celeba-hq](https://huggingface.co/datasets/mattymchen/celeba-hq) (`CelebA-HQ` high-resolution real portraits)
+- [ComplexDataLab/OpenFake](https://huggingface.co/datasets/ComplexDataLab/OpenFake) (`OpenFake_Real`, `FLUX_OpenFake`, `GPT_Image_1`, `OpenFake_SD35`, `OpenFake_Ideogram`, `OpenFake_HiDream`, `OpenFake_Imagen3/4`, `OpenFake_Grok`, `OpenFake_Qwen`, `OpenFake_Mystic`, `OpenFake_Chroma`, `OpenFake_Seedream`)
+- [Sowaiba01/Deepfake](https://huggingface.co/datasets/Sowaiba01/Deepfake) (`FaceSwap_InsightFace` deepfakes and paired `FaceSwap_Real` portraits)
