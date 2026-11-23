@@ -1,0 +1,62 @@
+{
+  "best_clip_branch": "clip_mlp",
+  "clip_linear_checkpoint": "models/clip_linear_v2.pt",
+  "clip_mlp_checkpoint": "models/clip_mlp_v2.pt",
+  "convnext_checkpoint": "models/convnext_v2.pt",
+  "thresholds_val_fpr5": {
+    "clip_linear": 0.47273968160152435,
+    "clip_mlp": 0.3442300707101822,
+    "convnext_v2": 0.3701268285512924,
+    "ensemble": 0.22774529457092285
+  },
+  "ensemble": {
+    "clip_weight": 0.45,
+    "convnext_weight": 0.55,
+    "threshold_val_fpr5": 0.22774529457092285,
+    "val_real_fpr": 0.04972095383054287,
+    "clean_auroc": 0.9835711670352801,
+    "clean_recall_fpr5": 0.9216828478964402,
+    "pert_mean_auroc": 0.9814144335407518,
+    "pert_mean_recall_fpr5": 0.9339335614884167,
+    "gen_score": 0.9551505024902223
+  },
+  "val_metrics": {
+    "clip_linear": {
+      "best_epoch": 1,
+      "gen_score": 0.9067848586397003,
+      "threshold_val_fpr5": 0.47273968160152435,
+      "val_real_fpr": 0.04972095383054287,
+      "clean_auroc": 0.968294022728053,
+      "clean_recall_fpr5": 0.8458646616541353,
+      "clean_recall_050": 0.8095238095238095,
+      "clean_fpr_050": 0.041603247082699135,
+      "pert_mean_auroc": 0.9600592787304716,
+      "pert_mean_recall_fpr5": 0.8529214714461414,
+      "epoch": 1,
+      "train_loss": 0.4964214856624603
+    },
+    "clip_mlp": {
+      "best_epoch": 3,
+      "gen_score": 0.9160704498785315,
+      "threshold_val_fpr5": 0.3442300707101822,
+      "val_real_fpr": 0.04972095383054287,
+      "clean_auroc": 0.9726675898269264,
+      "clean_recall_fpr5": 0.8696741854636592,
+      "clean_recall_050": 0.8208020050125313,
+      "clean_fpr_050": 0.03297818366311517,
+      "pert_mean_auroc": 0.9594316996030496,
+      "pert_mean_recall_fpr5": 0.8625083246204905,
+      "epoch": 3,
+      "train_loss": 0.21802453887462617
+    },
+    "convnext_v2": {
+      "epoch": 4,
+      "gen_score": 0.9226916666666667,
+      "threshold_val_fpr5": 0.4642106890678406,
+      "clean_auroc": 0.9689,
+      "clean_recall_fpr5": 0.8666666666666667,
+      "pert_mean_auroc": 0.9774222222222222,
+      "pert_mean_recall_fpr5": 0.8777777777777778
+    }
+  }
+}
